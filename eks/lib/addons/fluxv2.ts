@@ -9,10 +9,24 @@ export interface FluxV2Props extends cdk.StackProps {
     secretName: string;
     fluxVersion: string;
 }
-export interface Repository {
+export class Repository {
     repoUrl: string;
     repoBranch: string;
     repoPath: string;
+
+    constructor(repoUrl: string, repoBranch?: string, repoPath?: string) {
+        if (!repoBranch) {
+            this.repoBranch = "main"
+        } else {
+            this.repoBranch = repoBranch
+        }
+        if (!repoPath) {
+            this.repoPath = "test/workflows"
+        } else {
+            this.repoPath = repoPath
+        }
+        this.repoUrl = repoUrl
+    }
 }
 class FluxRelease {
     private fluxVersion: string;
