@@ -99,7 +99,7 @@ export class FluxV2 extends cdk.Construct {
                     prune: true,
                     sourceRef: {
                         kind: 'GitRepository',
-                        name: 'flux-system'
+                        name: 'flux-system'+index
                     },
                     validation: 'client'
                 }
