@@ -3,6 +3,8 @@ import * as eks from '@aws-cdk/aws-eks';
 import * as ec2 from '@aws-cdk/aws-ec2';
 import * as cdk from '@aws-cdk/core'
 import { FluxV2, Repository } from './addons/fluxv2';
+import { Karpenter } from './addons/karpenter';
+import { AWSLoadBalancerController} from './addons/awslb'
 
 export interface TestbedProps extends cdk.StackProps {
   fluxRepos: Repository[];
@@ -63,6 +65,15 @@ export class TestbedStack extends cdk.Stack {
       secretName: 'github-key',
       fluxRepos: props.fluxRepos,
       fluxVersion: props.fluxVersion
+    });
+
+    new Karpenter(this, 'Karpenter', {
+       cluster: cluster
+     });
+
+    new AWSLoadBalancerController(this, 'AWSLoadBalancerController', {
+      cluster: cluster,
+      namespace: 'kube-system'
     });
 
   }
