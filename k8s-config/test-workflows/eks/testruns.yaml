@@ -135,7 +135,7 @@ spec:
   - command:
     - wrap.py
     - wrap
-    - AWS_K8S_TESTER_EKS_NAME=megaxl-cluster-up-1 aws-k8s-tester eks create cluster
+    - aws-k8s-tester eks create cluster
       --enable-prompt=false -p test.yaml && vertical-scaling-clusterloader.sh; RES=$?;aws-k8s-tester
       eks delete cluster --enable-prompt=false -p test.yaml; exit $RES
     env:
