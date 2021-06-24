@@ -1,0 +1,100 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: cl2-mig-task
+  namespace: hakuna
+spec:
+  steps:
+  - command:
+    - /bin/sh
+    - -c
+    - aws-k8s-tester eks create cluster --enable-prompt=false -p test.yaml && aws-k8s-tester eks delete cluster --enable-prompt=false -p test.yaml
+    env:
+    - name: AWS_DEFAULT_REGION
+      value: us-west-2
+    - name: AWS_REGION
+      value: us-west-2
+    - name: AWS_K8S_TESTER_EKS_REGION
+      value: us-west-2
+    - name: AWS_K8S_TESTER_EKS_PARTITION
+      value: aws
+    - name: AWS_K8S_TESTER_EKS_S3_BUCKET_NAME
+      value: hakuna-results-eks-scalability-1-21
+    - name: AWS_K8S_TESTER_EKS_PARAMETERS_VERSION
+      value: "1.19"
+    - name: AWS_K8S_TESTER_EKS_PARAMETERS_RESOLVER_URL
+      value: https://api.beta.us-west-2.wesley.amazonaws.com
+    - name: AWS_K8S_TESTER_EKS_PARAMETERS_ROLE_CREATE
+      value: "true"
+    - name: AWS_K8S_TESTER_EKS_PARAMETERS_ROLE_SERVICE_PRINCIPALS
+      value: ec2.amazonaws.com,eks.amazonaws.com,eks-fargate-pods.amazonaws.com,eks-dev.aws.internal,eks-beta-pdx.aws.internal,eks-fargate-pods.aws.internal
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_NODE_GROUPS_ROLE_SERVICE_PRINCIPALS
+      value: ec2.amazonaws.com,eks.amazonaws.com,eks-fargate-pods.amazonaws.com,eks-dev.aws.internal,eks-beta-pdx.aws.internal,eks-fargate-pods.aws.internal
+    - name: AWS_K8S_TESTER_EKS_KUBECTL_PATH
+      value: /bin/kubectl
+    - name: AWS_K8S_TESTER_EKS_PARAMETERS_REQUEST_HEADER_KEY
+      value: x-eks-opts
+    - name: AWS_K8S_TESTER_EKS_PARAMETERS_REQUEST_HEADER_VALUE
+      value: 'scaleConfig={"masterScaleConfig": {"instanceTypes": ["t2.medium",
+          "t3.medium", "t3a.medium"], "bundleName": "bundle-2cpu-4gb"}, "etcdScaleConfig":
+          {"instanceTypes": ["t2.medium", "t3.medium", "t3a.medium"], "bundleName":
+          "bundle-2cpu-4gb"}};kubernetesVersion=1.19;manifest='
+    - name: AWS_K8S_TESTER_EKS_CLIENTS
+      value: "5"
+    - name: AWS_K8S_TESTER_EKS_CLIENT_QPS
+      value: "30"
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_NODE_GROUPS_ENABLE
+      value: "true"
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_NODE_GROUPS_ROLE_CREATE
+      value: "true"
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_NODE_GROUPS_ROLE_SERVICE_PRINCIPALS
+      value: ec2.amazonaws.com,eks.amazonaws.com,eks-fargate-pods.amazonaws.com,eks-dev.aws.internal,eks-beta-pdx.aws.internal,eks-fargate-pods.aws.internal
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_NODE_GROUPS_FETCH_LOGS
+      value: "false"
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_NODE_GROUPS_ASGS
+      value: '{"GetRef.Name-ng-al2-cpu":{"name":"GetRef.Name-ng-al2-cpu","remote-access-user-name":"ec2-user","ami-type":"AL2_x86_64","image-id":"","image-id-ssm-parameter":"/aws/service/eks/optimized-ami/1.19/amazon-linux-2/recommended/image_id","asg-min-size":10,"asg-max-size":10,"asg-desired-capacity":10,"instance-types":["c5.xlarge"],"volume-size":40,"kubelet-extra-args":"","cluster-autoscaler":{"enable":false}}}'
+    - name: AWS_K8S_TESTER_EKS_ON_FAILURE_DELETE
+      value: "true"
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_CLUSTER_LOADER_LOCAL_ENABLE
+      value: "true"
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_CLUSTER_LOADER_LOCAL_CLUSTER_LOADER_PATH
+      value: /build/runtime/bin/clusterloader2
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_CLUSTER_LOADER_LOCAL_TEST_CONFIG_PATH
+      value: /config.yaml
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_CLUSTER_LOADER_LOCAL_RUNS
+      value: "1"
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_CLUSTER_LOADER_LOCAL_NODES
+      value: "10"
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_CLUSTER_LOADER_LOCAL_CL2_ENABLE_PVS
+      value: "false"
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_CLUSTER_LOADER_LOCAL_PROMETHEUS_SCRAPE_KUBE_PROXY
+      value: "false"
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_CLUSTER_LOADER_LOCAL_ENABLE_SYSTEM_POD_METRICS
+      value: "false"
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_CLUSTER_LOADER_LOCAL_CL2_USE_HOST_NETWORK_PODS
+      value: "false"
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_CLUSTER_LOADER_LOCAL_NODES_PER_NAMESPACE
+      value: "10"
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_CLUSTER_LOADER_LOCAL_PODS_PER_NODE
+      value: "20"
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_CLUSTER_LOADER_LOCAL_BIG_GROUP_SIZE
+      value: "25"
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_CLUSTER_LOADER_LOCAL_MEDIUM_GROUP_SIZE
+      value: "10"
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_CLUSTER_LOADER_LOCAL_SMALL_GROUP_SIZE
+      value: "5"
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_CLUSTER_LOADER_LOCAL_SMALL_STATEFUL_SETS_PER_NAMESPACE
+      value: "0"
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_CLUSTER_LOADER_LOCAL_MEDIUM_STATEFUL_SETS_PER_NAMESPACE
+      value: "0"
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_CLUSTER_LOADER_LOCAL_TIMEOUT
+      value: 180m
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_CLUSTER_LOADER_LOCAL_CL2_SCHEDULER_THROUGHPUT_THRESHOLD
+      value: "20"
+    - name: ENABLE_EXEC_SERVICE
+      value: "false"                
+    - name: AWS_K8S_TESTER_EKS_PARAMETERS_ENCRYPTION_CMK_CREATE
+      value: "false"
+    image: 617930562442.dkr.ecr.us-west-2.amazonaws.com/eks-data-plane-prow-tester:latest
+    name: cl2-mig
+    resources: {}
