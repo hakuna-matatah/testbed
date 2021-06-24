@@ -37,10 +37,12 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: tekton-triggers-example-sa
+  namespace: hakuna
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: tekton-triggers-example-minimal
+  namespace: hakuna
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
@@ -190,6 +192,7 @@ spec:
       value: "false"
     image: 617930562442.dkr.ecr.us-west-2.amazonaws.com/eks-data-plane-prow-tester:latest
     name: cluster-create
+    timeout: 2h
     resources: {}
 ---
 apiVersion: tekton.dev/v1beta1
