@@ -1,0 +1,243 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: hakuna
+---  
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: tekton-triggers-example-minimal
+  namespace: hakuna
+rules:
+# EventListeners need to be able to fetch all namespaced resources
+- apiGroups: ["triggers.tekton.dev"]
+  resources: ["eventlisteners", "triggerbindings", "triggertemplates", "triggers"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+# configmaps is needed for updating logging config
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch"]
+# Permissions to create resources in associated TriggerTemplates
+- apiGroups: ["tekton.dev"]
+  resources: ["pipelineruns", "pipelineresources", "taskruns"]
+  verbs: ["create"]
+- apiGroups: [""]
+  resources: ["serviceaccounts"]
+  verbs: ["impersonate"]
+- apiGroups: ["policy"]
+  resources: ["podsecuritypolicies"]
+  resourceNames: ["tekton-triggers"]
+  verbs: ["use"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-triggers-example-binding
+  namespace: hakuna
+subjects:
+- kind: ServiceAccount
+  name: tekton-triggers-example-sa
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: tekton-triggers-example-minimal
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: tekton-triggers-example-clusterrole
+  namespace: hakuna
+rules:
+  # EventListeners need to be able to fetch any clustertriggerbindings
+- apiGroups: ["triggers.tekton.dev"]
+  resources: ["clustertriggerbindings", "clusterinterceptors"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: tekton-triggers-example-clusterbinding
+  namespace: hakuna
+subjects:
+- kind: ServiceAccount
+  name: tekton-triggers-example-sa
+  namespace: hakuna
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-triggers-example-clusterrole
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tekton-triggers-example-sa
+  namespace: hakuna
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: eks-pipeline-cron
+  namespace: hakuna
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: eks-hello-cron
+            image: curlimages/curl
+            args: ["curl", "-X", "POST", "--data", "{}", "el-eks-cron-listener.hakuna.svc.cluster.local:8080"]
+          restartPolicy: Never
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: demo-cron-binding
+  namespace: hakuna
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: eks-cron-listener
+  namespace: hakuna
+spec:
+  serviceAccountName: tekton-triggers-example-sa
+  triggers:
+    - name: demo-cron-trig
+      bindings:
+      - ref: demo-cron-binding
+      template:
+        ref: demo-ekspipeline-template  
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: demo-ekspipeline-template
+  namespace: hakuna
+spec:
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      generateName: demo-eks-pipeline-run-
+    spec:
+      pipelineRef:
+        name: demo-eks-pipeline
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: create-eks-cluster
+  namespace: hakuna
+spec:
+  steps:
+  - command:
+    - wrap.py
+    - wrap
+    - AWS_K8S_TESTER_EKS_NAME=megaxl-cluster-up-1 aws-k8s-tester eks create cluster
+      --enable-prompt=false -p test.yaml && vertical-scaling-clusterloader.sh; RES=$?;aws-k8s-tester
+      eks delete cluster --enable-prompt=false -p test.yaml; exit $RES
+    env:
+    - name: AWS_DEFAULT_REGION
+      value: us-west-2
+    - name: AWS_REGION
+      value: us-west-2
+    - name: AWS_K8S_TESTER_EKS_REGION
+      value: us-west-2
+    - name: AWS_K8S_TESTER_EKS_PARTITION
+      value: aws
+    - name: AWS_K8S_TESTER_EKS_S3_BUCKET_NAME
+      value: prow-beta-pdx-vertical-autoscaling
+    - name: AWS_K8S_TESTER_EKS_PARAMETERS_VERSION
+      value: "1.19"
+    - name: AWS_K8S_TESTER_EKS_PARAMETERS_RESOLVER_URL
+      value: https://api.beta.us-west-2.wesley.amazonaws.com
+    - name: AWS_K8S_TESTER_EKS_PARAMETERS_ROLE_CREATE
+      value: "true"
+    - name: AWS_K8S_TESTER_EKS_PARAMETERS_ROLE_SERVICE_PRINCIPALS
+      value: ec2.amazonaws.com,eks.amazonaws.com,eks-fargate-pods.amazonaws.com,eks-dev.aws.internal,eks-beta-pdx.aws.internal,eks-fargate-pods.aws.internal
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_NODE_GROUPS_ROLE_SERVICE_PRINCIPALS
+      value: ec2.amazonaws.com,eks.amazonaws.com,eks-fargate-pods.amazonaws.com,eks-dev.aws.internal,eks-beta-pdx.aws.internal,eks-fargate-pods.aws.internal
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_NODE_GROUPS_ENABLE
+      value: "true"
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_NODE_GROUPS_ROLE_CREATE
+      value: "true"
+    - name: AWS_K8S_TESTER_EKS_PARAMETERS_ENCRYPTION_CMK_CREATE
+      value: "false"
+    - name: AWS_K8S_TESTER_EKS_PARAMETERS_ENCRYPTION_CMK_ARN
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_NODE_GROUPS_ASGS
+      value: |
+        {
+          "GetRef.Name":{
+            "name":"GetRef.Name",
+            "remote-access-user-name":"ec2-user",
+            "ami-type":"AL2_x86_64",
+            "image-id":"",
+            "image-id-ssm-parameter":"/aws/service/eks/optimized-ami/1.19/amazon-linux-2/recommended/image_id",
+            "instance-types":["t3.small", "t3a.small"],
+            "asg-min-size":10,
+            "asg-max-size":10,
+            "asg-desired-capacity":10,
+            "cluster-autoscaler":{
+              "enable":false
+            }
+          }
+        }
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_CLUSTER_LOADER_LOCAL_ENABLE
+      value: "false"
+    - name: ENABLE_EXEC_SERVICE
+      value: "false"
+    image: 617930562442.dkr.ecr.us-west-2.amazonaws.com/eks-data-plane-prow-tester:latest
+    name: cluster-create
+    resources: {}
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: runloadtest
+  namespace: hakuna
+spec:
+  params:
+  - name: message
+    description: The message to print
+    default: This is the default message
+    type: string
+  steps:
+  - name: cl2test
+    image: bash
+    command: ["bash", "-c"]
+    args:
+      - echo '$(params.message)'
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: deletecluster
+  namespace: hakuna
+spec:
+  steps:
+  - name: bye-cluster
+    image: bash
+    command: ["bash", "-c"]
+    args:
+    - echo 'Goodbye Cluster!'
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: demo-eks-pipeline
+  namespace: hakuna
+spec:
+  tasks:
+  - name: create-eks-cluster
+    taskRef:
+      name: create-eks-cluster
+  - name: runloadtest
+    runAfter: [create-eks-cluster]
+    taskRef:
+      name: runloadtest
+  - name: deletecluster
+    runAfter: [runloadtest]
+    taskRef:
+      name: deletecluster
