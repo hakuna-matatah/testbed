@@ -42,7 +42,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: tekton-triggers-example-minimal
-  namespace: hakuna
+
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
@@ -235,7 +235,7 @@ spec:
   tasks:
   - name: create-eks-cluster
     taskRef:
-      name: create-eks-cluster
+      name: cl2-mig-task
   - name: runloadtest
     runAfter: [create-eks-cluster]
     taskRef:
