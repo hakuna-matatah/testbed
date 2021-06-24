@@ -148,7 +148,7 @@ spec:
     - name: AWS_K8S_TESTER_EKS_PARTITION
       value: aws
     - name: AWS_K8S_TESTER_EKS_S3_BUCKET_NAME
-      value: prow-beta-pdx-vertical-autoscaling
+      value: hakuna-results-eks-scalability-1-21
     - name: AWS_K8S_TESTER_EKS_PARAMETERS_VERSION
       value: "1.19"
     - name: AWS_K8S_TESTER_EKS_PARAMETERS_RESOLVER_URL
