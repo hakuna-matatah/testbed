@@ -138,3 +138,6 @@ spec:
         value: '$(params.cluster-name)'
       - name: region
         value: '$(params.region)'
+    workspaces:
+      - name: secrets
+        workspace: secrets
