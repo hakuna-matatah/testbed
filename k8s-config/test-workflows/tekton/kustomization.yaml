@@ -3,7 +3,7 @@ kind: Kustomization
 resources:
   - config.yaml
   - task/clusterloader2/loadtest/0.1/runload.yaml
-  - task/clusterloader2/loadtest/0.1/secret.yaml
+  - task/clusterloader2/loadtest/0.1/tests/secret.yaml
   - task/eks-cluster-create/eksctl/0.1/create-eks-cluster.yaml
   - task/eks-cluster-teardown/eksctl/0.1/teardown-eks-cluster.yaml
   - task/eks-cluster-teardown/eksctl/0.1/tests/secret.yaml  
