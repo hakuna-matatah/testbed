@@ -6,7 +6,6 @@ resources:
   - task/clusterloader2/loadtest/0.1/tests/secret.yaml
   - task/eks-cluster-create/eksctl/0.1/create-eks-cluster.yaml
   - task/eks-cluster-teardown/eksctl/0.1/delete-eks-cluster.yaml
-  - task/eks-cluster-teardown/eksctl/0.1/tests/secret.yaml  
   - task/vertical-autoscaling/mig/0.1/load-10-medium-medium.yaml
   - task/vertical-autoscaling/up/0.1/loadtest.yaml
   - pipeline/eks-cl2/eksctl/0.1/eks-cl2.yaml
