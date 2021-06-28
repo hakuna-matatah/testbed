@@ -5,7 +5,7 @@ resources:
   - task/clusterloader2/loadtest/0.1/runload.yaml
   - task/clusterloader2/loadtest/0.1/tests/secret.yaml
   - task/eks-cluster-create/eksctl/0.1/create-eks-cluster.yaml
-  - task/eks-cluster-teardown/eksctl/0.1/teardown-eks-cluster.yaml
+  - task/eks-cluster-teardown/eksctl/0.1/delete-eks-cluster.yaml
   - task/eks-cluster-teardown/eksctl/0.1/tests/secret.yaml  
   - task/vertical-autoscaling/mig/0.1/load-10-medium-medium.yaml
   - task/vertical-autoscaling/up/0.1/loadtest.yaml
@@ -19,3 +19,4 @@ resources:
   - pipeline/eks-vas-mig/akt/0.1/tests/eventlistener.yaml
   - pipeline/eks-vas-mig/akt/0.1/tests/triggerbinding.yaml
   - pipeline/eks-vas-mig/akt/0.1/tests/triggertemplate.yaml
+  
