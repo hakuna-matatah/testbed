@@ -113,8 +113,6 @@ spec:
       ls -larth /root/.aws
       export PATH=/tekton/home/.aws:$PATH
       ls -larth $HOME
-      export AWS_ACCESS_KEY_ID=AKIAS4ADFZSSWPTJPCA3
-      export AWS_SECRET_ACCESS_KEY=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
       curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
       install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
       env
