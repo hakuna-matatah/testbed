@@ -5,7 +5,7 @@ metadata:
   name: test-workflow
   namespace: flux-system
 spec:
-  interval: 5m0s
+  interval: 2m0s
   path: ./k8s-config/test-workflows/tekton
   prune: true
   sourceRef:
