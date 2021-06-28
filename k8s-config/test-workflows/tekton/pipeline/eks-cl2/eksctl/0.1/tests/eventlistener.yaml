@@ -1,0 +1,13 @@
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: eks-cl2-listener
+spec:
+  serviceAccountName: tekton-triggers-example-sa
+  triggers:
+    - name: eks-cl2-trig
+      bindings:
+      - ref: eks-cl2-binding
+      template:
+        ref: eks-cl2-pipeline-template 

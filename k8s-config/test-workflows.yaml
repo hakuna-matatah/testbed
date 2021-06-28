@@ -6,9 +6,9 @@ metadata:
   namespace: flux-system
 spec:
   interval: 5m0s
-  path: ./k8s-config/test-workflows/eks
+  path: ./k8s-config/test-workflows/tekton
   prune: true
   sourceRef:
     kind: GitRepository
     name: flux-system0
-  validation: client
+  validation: clients

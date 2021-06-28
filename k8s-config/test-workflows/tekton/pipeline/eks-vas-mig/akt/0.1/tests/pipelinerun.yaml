@@ -1,0 +1,12 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: vas-mig-pipeline-run-
+  namespace: hakuna
+spec:
+  pipelineRef:
+    name: vas-mig
+  params:
+  - name: message
+    value: $(tt.params.message)

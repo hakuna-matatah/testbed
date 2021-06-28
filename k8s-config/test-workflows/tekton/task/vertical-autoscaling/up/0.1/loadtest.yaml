@@ -1,0 +1,68 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: vas-cl2-up
+  namespace: hakuna
+spec:
+  steps:
+  - command:
+    - wrap.py
+    - wrap
+    - aws-k8s-tester eks create cluster
+      --enable-prompt=false -p test.yaml && vertical-scaling-clusterloader.sh; RES=$?;aws-k8s-tester
+      eks delete cluster --enable-prompt=false -p test.yaml; exit $RES
+    env:
+    - name: AWS_DEFAULT_REGION
+      value: us-west-2
+    - name: AWS_REGION
+      value: us-west-2
+    - name: AWS_K8S_TESTER_EKS_REGION
+      value: us-west-2
+    - name: AWS_K8S_TESTER_EKS_PARTITION
+      value: aws
+    - name: AWS_K8S_TESTER_EKS_S3_BUCKET_NAME
+      value: hakuna-results-eks-scalability-1-21
+    - name: AWS_K8S_TESTER_EKS_PARAMETERS_VERSION
+      value: "1.19"
+    - name: AWS_K8S_TESTER_EKS_PARAMETERS_RESOLVER_URL
+      value: https://api.beta.us-west-2.wesley.amazonaws.com
+    - name: AWS_K8S_TESTER_EKS_PARAMETERS_ROLE_CREATE
+      value: "true"
+    - name: AWS_K8S_TESTER_EKS_PARAMETERS_ROLE_SERVICE_PRINCIPALS
+      value: ec2.amazonaws.com,eks.amazonaws.com,eks-fargate-pods.amazonaws.com,eks-dev.aws.internal,eks-beta-pdx.aws.internal,eks-fargate-pods.aws.internal
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_NODE_GROUPS_ROLE_SERVICE_PRINCIPALS
+      value: ec2.amazonaws.com,eks.amazonaws.com,eks-fargate-pods.amazonaws.com,eks-dev.aws.internal,eks-beta-pdx.aws.internal,eks-fargate-pods.aws.internal
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_NODE_GROUPS_ENABLE
+      value: "true"
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_NODE_GROUPS_ROLE_CREATE
+      value: "true"
+    - name: AWS_K8S_TESTER_EKS_PARAMETERS_ENCRYPTION_CMK_CREATE
+      value: "false"
+    - name: AWS_K8S_TESTER_EKS_PARAMETERS_ENCRYPTION_CMK_ARN
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_NODE_GROUPS_ASGS
+      value: |
+        {
+          "GetRef.Name":{
+            "name":"GetRef.Name",
+            "remote-access-user-name":"ec2-user",
+            "ami-type":"AL2_x86_64",
+            "image-id":"",
+            "image-id-ssm-parameter":"/aws/service/eks/optimized-ami/1.19/amazon-linux-2/recommended/image_id",
+            "instance-types":["t3.small", "t3a.small"],
+            "asg-min-size":10,
+            "asg-max-size":10,
+            "asg-desired-capacity":10,
+            "cluster-autoscaler":{
+              "enable":false
+            }
+          }
+        }
+    - name: AWS_K8S_TESTER_EKS_ADD_ON_CLUSTER_LOADER_LOCAL_ENABLE
+      value: "false"
+    - name: ENABLE_EXEC_SERVICE
+      value: "false"
+    image: 617930562442.dkr.ecr.us-west-2.amazonaws.com/eks-data-plane-prow-tester:latest
+    name: cluster-create
+    timeout: 2h
+    resources: {}

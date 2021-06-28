@@ -1,0 +1,62 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: eks-cluster-create
+  namespace: hakuna
+spec:
+  steps:
+  - name: cl2test
+    image: amazon/aws-cli
+    script: |
+      #!/usr/bin/env bash
+      set -xe
+      echo $(pwd)
+      echo $(ls)
+      echo $(aws sts get-caller-identity)
+      if [ "$(workspaces.config.bound)" == "true" ] ; then
+        echo hello! > $(workspaces.config.path)/message
+      fi
+      cd $(workspaces.config.path)
+      echo $(ls)
+      AWS_K8S_TESTER_VERSION=v1.6.0
+      DOWNLOAD_URL=https://github.com/aws/aws-k8s-tester/releases/download 
+      curl -L ${DOWNLOAD_URL}/${AWS_K8S_TESTER_VERSION}/aws-k8s-tester-${AWS_K8S_TESTER_VERSION}-linux-$(go env GOARCH) -o ./aws-k8s-tester
+      curl -L ${DOWNLOAD_URL}/${AWS_K8S_TESTER_VERSION}/k8s-tester-${AWS_K8S_TESTER_VERSION}-linux-$(go env GOARCH) -o ./k8s-tester
+      curl -L ${DOWNLOAD_URL}/${AWS_K8S_TESTER_VERSION}/ec2-utils-${AWS_K8S_TESTER_VERSION}-linux-$(go env GOARCH) -o ./ec2-utils
+      curl -L ${DOWNLOAD_URL}/${AWS_K8S_TESTER_VERSION}/ecr-utils-${AWS_K8S_TESTER_VERSION}-linux-$(go env GOARCH) -o ./ecr-utils
+      curl -L ${DOWNLOAD_URL}/${AWS_K8S_TESTER_VERSION}/eks-utils-${AWS_K8S_TESTER_VERSION}-linux-$(go env GOARCH) -o ./eks-utils
+      curl -L ${DOWNLOAD_URL}/${AWS_K8S_TESTER_VERSION}/etcd-utils-${AWS_K8S_TESTER_VERSION}-linux-$(go env GOARCH) -o ./etcd-utils
+      curl -L ${DOWNLOAD_URL}/${AWS_K8S_TESTER_VERSION}/cw-utils-${AWS_K8S_TESTER_VERSION}-linux-$(go env GOARCH) -o ./cw-utils
+      curl -L ${DOWNLOAD_URL}/${AWS_K8S_TESTER_VERSION}/s3-utils-${AWS_K8S_TESTER_VERSION}-linux-$(go env GOARCH) -o ./s3-utils
+      curl -L ${DOWNLOAD_URL}/${AWS_K8S_TESTER_VERSION}/sts-utils-${AWS_K8S_TESTER_VERSION}-linux-$(go env GOARCH) -o ./sts-utils
+      chmod +x ./aws-k8s-tester
+      chmod +x ./k8s-tester
+      chmod +x ./ec2-utils
+      chmod +x ./ecr-utils
+      chmod +x ./eks-utils
+      chmod +x ./etcd-utils
+      chmod +x ./cw-utils
+      chmod +x ./s3-utils
+      chmod +x ./sts-utils
+      echo $(ls -larth)
+      AWS_K8S_TESTER_EKS_PARAMETERS_RESOLVER_URL=https://api.beta.us-west-2.wesley.amazonaws.com
+      AWS_K8S_TESTER_EKS_PARAMETERS_VERSION=1.19
+      AWS_K8S_TESTER_EKS_REGION=us-west-2
+      AWS_K8S_TESTER_EKS_PARTITION=aws
+      AWS_K8S_TESTER_EKS_S3_BUCKET_NAME=hakuna-results-eks-scalability-1-21
+      AWS_K8S_TESTER_EKS_PARAMETERS_ROLE_CREATE=true
+      AWS_K8S_TESTER_EKS_PARAMETERS_ROLE_SERVICE_PRINCIPALS="ec2.amazonaws.com,eks.amazonaws.com,eks-fargate-pods.amazonaws.com,eks-dev.aws.internal,eks-beta-pdx.aws.internal,eks-fargate-pods.aws.internal"
+      AWS_K8S_TESTER_EKS_ADD_ON_NODE_GROUPS_ENABLE=true
+      AWS_K8S_TESTER_EKS_ADD_ON_NODE_GROUPS_ROLE_CREATE=true
+      AWS_K8S_TESTER_EKS_ADD_ON_NODE_GROUPS_FETCH_LOGS=false
+      AWS_K8S_TESTER_EKS_ADD_ON_NODE_GROUPS_ROLE_SERVICE_PRINCIPALS="ec2.amazonaws.com,eks.amazonaws.com,eks-fargate-pods.amazonaws.com,eks-dev.aws.internal,eks-beta-pdx.aws.internal,eks-fargate-pods.aws.internal"
+      AWS_K8S_TESTER_EKS_ADD_ON_NODE_GROUPS_ASGS='{"GetRef.Name-ng-al2-cpu":{"name":"GetRef.Name-ng-al2-cpu","remote-access-user-name":"ec2-user","ami-type":"AL2_x86_64","image-id":"","image-id-ssm-parameter":"/aws/service/eks/optimized-ami/1.19/amazon-linux-2/recommended/image_id","asg-min-size":10,"asg-max-size":10,"asg-desired-capacity":10,"instance-types":["c5.xlarge"],"volume-size":40,"kubelet-extra-args":"","cluster-autoscaler":{"enable":false}}}'
+      AWS_K8S_TESTER_EKS_ON_FAILURE_DELETE=true
+      AWS_K8S_TESTER_EKS_PARAMETERS_ENCRYPTION_CMK_CREATE=false
+      AWS_K8S_TESTER_EKS_PARAMETERS_REQUEST_HEADER_VALUE="clusterType=XLARGE" 
+      AWS_K8S_TESTER_EKS_PARAMETERS_REQUEST_HEADER_KEY="x-eks-opts"
+      ./aws-k8s-tester eks create cluster --enable-prompt=false -p test.yaml && aws-k8s-tester eks delete cluster --enable-prompt=false -p ./test.yaml
+  workspaces:
+    - name: config
+      description: |
+      A workspace into which a kubeconfig file called `kubeconfig` will be written that will contain the information required to access the cluster. 

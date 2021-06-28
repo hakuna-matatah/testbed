@@ -1,0 +1,6 @@
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: vas-mig-binding
+  namespace: hakuna

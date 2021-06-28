@@ -1,0 +1,63 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: cl2-mig-pipeline
+  namespace: hakuna
+spec:
+  tasks:
+  - name: cl2-mig-task
+    taskRef:
+      name: cl2-mig-task
+
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: cl2-mig-pipeline-cron
+  namespace: hakuna
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: eks-hello-cron
+            image: curlimages/curl
+            args: ["curl", "-X", "POST", "--data", "{}", "el-cl2-mig-cron-listener.hakuna.svc.cluster.local:8080"]
+          restartPolicy: Never
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: cl2-mig-cron-binding
+  namespace: hakuna
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: cl2-mig-cron-listener
+  namespace: hakuna
+spec:
+  serviceAccountName: tekton-triggers-example-sa
+  triggers:
+    - name: cl2-mig-cron-trig
+      bindings:
+      - ref: cl2-mig-cron-binding
+      template:
+        ref: cl2-mig-pipeline-template  
+---
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: eks-cl2-pipeline-template
+  namespace: hakuna
+spec:
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      generateName: eks-cl2-pipeline-template-
+    spec:
+      pipelineRef:
+        name: eks-cl2

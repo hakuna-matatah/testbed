@@ -1,0 +1,83 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: eks-create-kubeconfig-pvc
+  namespace: hakuna
+spec:
+  resources:
+    requests:
+      storage: 2Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: gp2
+---
+apiVersion: tekton.dev/v1beta1
+kind: TaskRun
+metadata:
+  namespace: hakuna
+  generateName: create-eks-cluster-
+spec:
+  params:
+  - name: cluster-name
+    value: "cluster-5"
+  - name: eks-version
+    value: "1.18"
+  - name: region
+    value: "us-west-2"
+  - name: zones
+    value: "us-west-2a,us-west-2b,us-west-2c"
+  - name: nodegroup-name
+    value: "linux-nodes"
+  - name: node-type
+    value: "m5.xlarge"
+  - name: desired-nodes
+    value: "10"
+  - name: min-nodes
+    value: "1"
+  - name: max-nodes
+    value: "10"     
+  taskRef:
+    name: eks-cluster-create  
+  workspaces:
+  - name: config
+    emptyDir: {}
+  - name: secrets
+    secret:
+      secretName: aws-credentials 
+---
+apiVersion: tekton.dev/v1beta1
+kind: TaskRun
+metadata:
+  namespace: hakuna
+  generateName: create-eks-cluster-with-pvc-
+spec:
+  params:
+  - name: cluster-name
+    value: "cluster-6"
+  - name: eks-version
+    value: "1.18"
+  - name: region
+    value: "us-west-2"
+  - name: zones
+    value: "us-west-2a,us-west-2b,us-west-2c"
+  - name: nodegroup-name
+    value: "linux-nodes"
+  - name: node-type
+    value: "m5.xlarge"
+  - name: desired-nodes
+    value: "10"
+  - name: min-nodes
+    value: "1"
+  - name: max-nodes
+    value: "10"   
+  taskRef:
+    name: eks-cluster-create
+  workspaces:
+  - name: config
+    persistentVolumeClaim:
+      claimName: eks-create-kubeconfig-pvc
+  - name: secrets
+    secret:
+      secretName: aws-credentials     

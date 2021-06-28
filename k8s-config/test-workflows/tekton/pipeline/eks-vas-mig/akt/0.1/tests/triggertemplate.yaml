@@ -1,0 +1,21 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: vas-mig-template
+  namespace: hakuna
+spec:
+  params:
+  - name: message
+    description: The message to print
+    default: ran load test
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      generateName: vas-mig-run-
+    spec:
+      pipelineRef:
+        name: vas-mig
+      params:
+      - name: message
+        value: $(tt.params.message)

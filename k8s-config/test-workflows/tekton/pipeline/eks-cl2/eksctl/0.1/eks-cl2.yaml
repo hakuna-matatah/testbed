@@ -1,0 +1,140 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: eks-cl2
+  namespace: hakuna
+spec:
+  workspaces:
+    - name: secrets
+    - name: config
+    - name: source
+  params:
+  - name: cluster-name
+    description: The name of the EKS cluster you want to spin.
+  - name: eks-version
+    default: "1.18"
+    description: The EKS version to install.
+  - name: region
+    default: us-west-2
+    description: The region where the cluster is in.
+  - name: zones
+    default: us-west-2a,us-west-2b,us-west-2c
+    description: The zones where the cluster is in.
+  - name: nodegroup-name
+    default: linux-nodes
+    description: The name of the nodegroup of the cluster.
+  - name: node-type
+    default: m5.xlarge
+    description: The type of the EC2 instaces for the nodegroup of the cluster.
+  - name: desired-nodes
+    default: "4"
+    description: The desired number of nodes in the cluster.
+  - name: min-nodes
+    default: "1"
+    description: The minimum number of nodes in the cluster.
+  - name: max-nodes
+    default: "10"
+    description: The maximum number of nodes in the cluster.
+  - name: giturl
+    description: "git url to clone the package"
+    default: https://github.com/kubernetes/perf-tests.git
+  - name: version
+    description: golang version to use for builds
+    default: "latest"
+  - name: flags
+    description: flags to use for the test command
+    default: -v
+  - name: GOOS
+    description: "running program's operating system target"
+    default: linux
+  - name: GOARCH
+    description: "running program's architecture target"
+    default: amd64
+  - name: GO111MODULE
+    description: "value of module support"
+    default: auto
+  - name: GOCACHE
+    description: "Go caching directory path"
+    default: ""
+  - name: GOMODCACHE
+    description: "Go mod caching directory path"
+    default: ""
+  - name: GOPROXY
+    default: direct
+  - name: endpoint
+    description: "aws eks enpoint"
+    default: https://eks.us-west-2.amazonaws.com         
+  tasks:
+  - name: create-eks-cluster
+    taskRef:
+      name: eks-cluster-create
+    params:
+      - name: cluster-name
+        value: '$(params.cluster-name)'
+      - name: eks-version
+        value: '$(params.eks-version)'
+      - name: region
+        value: '$(params.region)'
+      - name: zones
+        value: '$(params.zones)'
+      - name: nodegroup-name
+        value: '$(params.nodegroup-name)'
+      - name: node-type
+        value: '$(params.node-type)'
+      - name: desired-nodes
+        value: '$(params.desired-nodes)'
+      - name: min-nodes
+        value: '$(params.min-nodes)'
+      - name: max-nodes
+        value: '$(params.max-nodes)'
+    workspaces:
+      - name: secrets
+        workspace: secrets
+      - name: config    
+        workspace: config
+  - name: runloadtest
+    runAfter: [create-eks-cluster]
+    taskRef:
+      name: clusterloader2
+    params:
+      - name: giturl
+        value: '$(params.giturl)'
+      - name: version
+        value: '$(params.version)'
+      - name: flags
+        value: '$(params.flags)'
+      - name: GOOS
+        value: '$(params.GOOS)'
+      - name: GOARCH
+        value: '$(params.GOARCH)'
+      - name: GO111MODULE
+        value: '$(params.GO111MODULE)'
+      - name: GOCACHE
+        value: '$(params.GOCACHE)'
+      - name: GOMODCACHE
+        value: '$(params.GOMODCACHE)'
+      - name: GOPROXY
+        value: '$(params.GOPROXY)'
+      - name: cluster-name
+        value: '$(params.cluster-name)'
+      - name: region
+        value: '$(params.region)'
+      - name: endpoint
+        value:  '$(params.endpoint)'
+    workspaces:
+      - name: source
+        workspace: source
+      - name: secrets
+        workspace: secrets
+      - name: config    
+        workspace: config
+  - name: delete-eks-cluster
+    runAfter: [runloadtest]
+    taskRef:
+      name: eks-cluster-teardown
+    params:
+      - name: cluster-name
+        value: '$(params.cluster-name)'
+      - name: region
+        value: '$(params.region)'

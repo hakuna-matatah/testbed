@@ -1,0 +1,16 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: vas-mig-cron
+  namespace: hakuna
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: vas-mig-cron
+            image: curlimages/curl
+            args: ["curl", "-X", "POST", "--data", "{}", "vas-mig-listener.hakuna.svc.cluster.local:8080"]
+          restartPolicy: Never

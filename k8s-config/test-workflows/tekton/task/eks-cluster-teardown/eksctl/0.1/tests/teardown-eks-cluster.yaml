@@ -1,0 +1,36 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: TaskRun
+metadata:
+  namespace: hakuna
+  generateName: teardown-eks-cluster-
+spec:
+  taskRef:
+    name: eks-cluster-teardown
+  params:
+  - name: cluster-name
+    value: cluster-5
+  - name: region
+    value: us-west-2
+  workspaces:
+  - name: secrets
+    secret:
+      secretName: aws-credentials
+---
+apiVersion: tekton.dev/v1beta1
+kind: TaskRun
+metadata:
+  namespace: hakuna
+  generateName: teardown-eks-cluster-
+spec:
+  taskRef:
+    name: eks-cluster-teardown
+  params:
+  - name: cluster-name
+    value: cluster-6
+  - name: region
+    value: us-west-2
+  workspaces:
+  - name: secrets
+    secret:
+      secretName: aws-credentials

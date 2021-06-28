@@ -39,6 +39,9 @@ export class TestbedStack extends cdk.Stack {
     const workerRole = new iam.Role(this, 'WorkerRole', {
       assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
       managedPolicies: [
+        //to-do remove this; adding it for creating eks cluster with test workflowpods
+        iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess'),
+        //
         iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonEKSWorkerNodePolicy'),
         iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonEC2ContainerRegistryReadOnly'),
         iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonEKS_CNI_Policy'),

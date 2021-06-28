@@ -1,0 +1,46 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: TaskRun
+metadata:
+  generateName: clusterloader2-run-
+  namespace: hakuna
+spec:
+  params:
+  - name: giturl
+    value: https://github.com/kubernetes/perf-tests.git
+  - name: version
+    value: latest
+  - name: flags
+    value: -v
+  - name: GOOS
+    value: linux
+  - name: GOARCH
+    value: amd64
+  - name: GO111MODULE
+    value: auto
+  - name: GOCACHE
+    value: ""
+  - name: GOMODCACHE
+    value: ""
+  - name: GOPROXY
+    value: direct
+  - name: cluster-name
+    value: cluster-2
+  - name: region
+    value: us-west-2
+  - name: endpoint
+    value:  https://eks.us-west-2.amazonaws.com
+  resources: {}
+  serviceAccountName: default
+  taskRef:
+    kind: Task
+    name: clusterloader2
+  workspaces:
+  - name: source
+    emptyDir: {}
+  - name: config
+    emptyDir: {}
+  - name: secrets
+    secret:
+      secretName: aws-credentials       
+  timeout: 2h0m0s

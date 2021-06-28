@@ -1,0 +1,14 @@
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: vas-mig-listener
+  namespace: hakuna
+spec:
+  serviceAccountName: tekton-triggers-example-sa
+  triggers:
+    - name: vas-mig-trig
+      bindings:
+      - ref: vas-mig-binding
+      template:
+        ref: vas-mig-template

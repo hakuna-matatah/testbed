@@ -1,7 +1,8 @@
+---
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: cl2-mig-task
+  name: vas-cl2-mig
   namespace: hakuna
 spec:
   steps:
